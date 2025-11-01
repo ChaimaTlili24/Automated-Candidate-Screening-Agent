@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Board</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Job Board</h1>
+
+        <!-- Formulaire de recherche et filtre -->
+        <form method="get" class="search-form">
+            <input type="text" name="search" placeholder="Search jobs..." value="{{ search }}">
+            <select name="domain">
+                <option value="">All Domains</option>
+                {% for d in domains %}
+                    <option value="{{ d }}" {% if d == selected_domain %}selected{% endif %}>{{ d }}</option>
+                {% endfor %}
+            </select>
+
+            <button type="submit">Filter</button>
+        </form>
+
+        <!-- Conteneur des jobs -->
+        <div class="jobs-container">
+            {% if jobs %}
+                {% for job in jobs %}
+                    <div class="job-card">
+                        <div class="job-header">
+                            <h2>{{ job[1] }}</h2>
+                            <span class="domain" style="background: linear-gradient(135deg, {{ domain_colors.get(job[3], '#1f77b4') }}, #1f77b4)">
+                                {{ job[3] }}
+                            </span>
+                        </div>
+                        <!-- Bouton standard pour tous les jobs -->
+                        <a href="{{ url_for('job_detail', job_id=job[0]) }}" class="apply-btn">View Job</a>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="no-data">No jobs found.</p>
+            {% endif %}
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination">
+            {% if total_pages > 1 %}
+                {% if page > 1 %}
+                    <a href="?search={{ search }}&domain={{ selected_domain }}&page={{ page - 1 }}" class="page-link">&laquo; Prev</a>
+                {% endif %}
+
+                {% set start = page - 2 if page - 2 > 1 else 1 %}
+                {% set end = page + 2 if page + 2 < total_pages else total_pages %}
+
+                {% if start > 1 %}
+                    <a href="?search={{ search }}&domain={{ selected_domain }}&page=1" class="page-link">1</a>
+                    {% if start > 2 %}<span class="dots">...</span>{% endif %}
+                {% endif %}
+
+                {% for p in range(start, end + 1) %}
+                    <a href="?search={{ search }}&domain={{ selected_domain }}&page={{ p }}" class="page-link {% if p == page %}active{% endif %}">{{ p }}</a>
+                {% endfor %}
+
+                {% if end < total_pages %}
+                    {% if end < total_pages - 1 %}<span class="dots">...</span>{% endif %}
+                    <a href="?search={{ search }}&domain={{ selected_domain }}&page={{ total_pages }}" class="page-link">{{ total_pages }}</a>
+                {% endif %}
+
+                {% if page < total_pages %}
+                    <a href="?search={{ search }}&domain={{ selected_domain }}&page={{ page + 1 }}" class="page-link">Next &raquo;</a>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

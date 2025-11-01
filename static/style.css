@@ -1,0 +1,189 @@
+:root {
+    --dark-blue: #0a1a3a;
+    --medium-blue: #1a2a4a;
+    --light-blue: #2a3a5a;
+    --cream: #f5f5f0;
+    --beige: #e8e4d9;
+    --accent: #4a6fa5;
+    --white: #ffffff;
+    --gray: #a0aec0;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --glow: 0 0 10px rgba(74, 111, 165, 0.5), 0 0 20px rgba(74, 111, 165, 0.3);
+    --soft-glow: 0 0 5px rgba(74, 111, 165, 0.3);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background: radial-gradient(circle at center, var(--dark-blue) 0%, var(--medium-blue) 100%);
+    color: var(--white);
+    line-height: 1.6;
+    min-height: 100vh;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.container {
+    width: 100%;
+    max-width: 1200px;
+}
+
+/* Header */
+h1 {
+    text-align: center;
+    font-size: 3rem;
+    background: linear-gradient(to right, var(--accent), var(--beige), var(--cream));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: var(--soft-glow);
+    margin-bottom: 30px;
+}
+
+/* Search form */
+.search-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 30px;
+    justify-content: center;
+}
+
+.search-form input[type="text"],
+.search-form select {
+    padding: 12px 15px;
+    border-radius: 8px;
+    border: 1px solid var(--accent);
+    outline: none;
+    background: var(--medium-blue);
+    color: var(--white);
+    min-width: 200px;
+    transition: var(--transition);
+}
+
+.search-form input[type="text"]:focus,
+.search-form select:focus {
+    border-color: var(--beige);
+}
+
+.search-form button {
+    padding: 12px 25px;
+    border-radius: 50px;
+    border: none;
+    background: var(--accent);
+    color: var(--white);
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.search-form button:hover {
+    background: var(--beige);
+    color: var(--dark-blue);
+}
+
+/* Jobs container */
+.jobs-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+/* Job card */
+.job-card {
+    background: rgba(10, 26, 58, 0.8);
+    border-radius: 20px;
+    padding: 25px 20px;
+    border: 1px solid rgba(74, 111, 165, 0.3);
+    box-shadow: 0 4px 15px rgba(74, 111, 165, 0.3);
+    transition: var(--transition);
+}
+
+.job-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 25px rgba(74, 111, 165, 0.5);
+}
+
+.job-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+.job-header h2 {
+    font-size: 1.5rem;
+    color: var(--white);
+}
+
+.domain {
+    padding: 5px 12px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--white);
+    text-transform: uppercase;
+}
+
+/* Company */
+.company {
+    font-size: 0.95rem;
+    color: var(--gray);
+    margin-bottom: 20px;
+}
+
+/* Apply button */
+.apply-btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, var(--accent), var(--beige));
+    color: var(--dark-blue);
+    border-radius: 50px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.apply-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 20px rgba(74, 111, 165, 0.4);
+}
+
+/* No jobs */
+.no-data {
+    text-align: center;
+    color: var(--gray);
+    font-size: 1.2rem;
+    grid-column: 1 / -1;
+}
+.pagination {
+    text-align: center;
+    margin-top: 30px;
+}
+
+.page-link {
+    display: inline-block;
+    margin: 0 5px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--accent);
+    color: var(--white);
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.page-link:hover {
+    background: var(--accent);
+    color: var(--dark-blue);
+}
+
+.page-link.active {
+    background: var(--beige);
+    color: var(--dark-blue);
+    border-color: var(--beige);
+}

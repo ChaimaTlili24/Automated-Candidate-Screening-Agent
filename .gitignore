@@ -1,4 +1,7 @@
 # Ignore browser caches
 AppData/Local/360extremebrowser/
 AppData/Local/*/Chrome/User Data/Default/Cache/
+echo Meta-Llama-3-8B-Instruct.Q4_0.gguf >> .gitignore
+git add .gitignore
+git commit -m "Ignore large model file"
 Meta-Llama-3-8B-Instruct.Q4_0.gguf

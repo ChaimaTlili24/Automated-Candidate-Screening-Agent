@@ -90,23 +90,25 @@ h1 {
 /* Jobs container */
 .jobs-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(3, 1fr); /* 3 cards par ligne */
+    gap: 30px; /* plus d’espace entre les cards pour la taille plus grande */
+    justify-items: center;
 }
 
 /* Job card */
 .job-card {
-    background: rgba(10, 26, 58, 0.8);
+    background: rgba(10, 26, 58, 0.85);
     border-radius: 20px;
-    padding: 25px 20px;
+    padding: 30px 25px; /* card plus grande */
     border: 1px solid rgba(74, 111, 165, 0.3);
-    box-shadow: 0 4px 15px rgba(74, 111, 165, 0.3);
+    box-shadow: 0 6px 20px rgba(74, 111, 165, 0.4);
     transition: var(--transition);
+    width: 100%; /* pour que la card remplisse sa colonne */
 }
 
 .job-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 6px 25px rgba(74, 111, 165, 0.5);
+    box-shadow: 0 8px 30px rgba(74, 111, 165, 0.5);
 }
 
 .job-header {
@@ -117,22 +119,22 @@ h1 {
 }
 
 .job-header h2 {
-    font-size: 1.5rem;
+    font-size: 1.6rem;
     color: var(--white);
 }
 
 .domain {
-    padding: 5px 12px;
-    border-radius: 12px;
-    font-size: 0.85rem;
-    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 14px;
+    font-size: 0.9rem;
+    font-weight: 700;
     color: var(--white);
     text-transform: uppercase;
 }
 
 /* Company */
 .company {
-    font-size: 0.95rem;
+    font-size: 1rem;
     color: var(--gray);
     margin-bottom: 20px;
 }
@@ -140,7 +142,7 @@ h1 {
 /* Apply button */
 .apply-btn {
     display: inline-block;
-    padding: 10px 20px;
+    padding: 12px 25px;
     background: linear-gradient(135deg, var(--accent), var(--beige));
     color: var(--dark-blue);
     border-radius: 50px;
@@ -151,7 +153,7 @@ h1 {
 
 .apply-btn:hover {
     transform: translateY(-3px);
-    box-shadow: 0 5px 20px rgba(74, 111, 165, 0.4);
+    box-shadow: 0 6px 25px rgba(74, 111, 165, 0.5);
 }
 
 /* No jobs */
@@ -161,9 +163,11 @@ h1 {
     font-size: 1.2rem;
     grid-column: 1 / -1;
 }
+
+/* Pagination */
 .pagination {
     text-align: center;
-    margin-top: 30px;
+    margin-top: 40px;
 }
 
 .page-link {
@@ -186,4 +190,98 @@ h1 {
     background: var(--beige);
     color: var(--dark-blue);
     border-color: var(--beige);
+}
+
+/* Responsive : moins de cards sur petits écrans */
+@media screen and (max-width: 1024px) {
+    .jobs-container {
+        grid-template-columns: repeat(2, 1fr); /* 2 cards par ligne */
+    }
+}
+
+@media screen and (max-width: 700px) {
+    .jobs-container {
+        grid-template-columns: 1fr; /* 1 card par ligne */
+    }
+}
+.job-page {
+    max-width: 900px;
+    margin: 0 auto;
+    background-color: white;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    font-size: 14px;
+    line-height: 1.5;
+    color: #333;
+}
+
+.job-page h1 {
+    margin-bottom: 10px;
+    font-size: 24px;
+}
+
+.job-page .domain {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 5px;
+    color: white;
+    margin-bottom: 20px;
+}
+
+.job-page .job-details {
+    margin-top: 15px;
+}
+
+/* Styles pour le HTML généré par Markdown */
+.job-page .job-details h2 {
+    margin-top: 20px;
+    margin-bottom: 10px;
+    font-size: 18px;
+    color: #2c3e50;
+}
+
+.job-page .job-details h3 {
+    margin-top: 15px;
+    margin-bottom: 8px;
+    font-size: 16px;
+    color: #34495e;
+}
+
+.job-page .job-details p {
+    margin-bottom: 12px;
+}
+
+.job-page .job-details ul, 
+.job-page .job-details ol {
+    margin-left: 20px;
+    margin-bottom: 15px;
+}
+
+.job-page .job-details li {
+    margin-bottom: 5px;
+}
+
+.job-page .job-details strong {
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.job-page .job-details em {
+    font-style: italic;
+}
+
+.job-page a.button {
+    display: inline-block;
+    margin-top: 20px;
+    text-decoration: none;
+    background-color: #007bff;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+.job-page a.button:hover {
+    background-color: #0056b3;
 }

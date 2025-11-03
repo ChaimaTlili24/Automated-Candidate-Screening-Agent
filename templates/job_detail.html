@@ -7,17 +7,33 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+
     <div class="job-page">
+
         <h1>{{ job_title }}</h1>
+
         <span class="domain" style="background-color: {{ domain_colors.get(job_domain, '#7f7f7f') }};">
             {{ job_domain }}
         </span>
 
+        <!-- ✅ Formulaire Upload CV ajouté ici -->
+        
+        <!-- ✅ Fin Upload -->
+
         <div class="job-details">
             {{ job_description_html|safe }}
         </div>
+        <div class="upload-section">
+            <h3>Upload Your CV</h3>
 
-        <a href="{{ url_for('index') }}" class="button">Back to Job Board</a>
+            <form action="{{ url_for('upload_cv') }}" method="POST" enctype="multipart/form-data">
+                <input type="file" name="cv_file" accept=".pdf,.jpg,.jpeg,.png,.docx" required>
+                <button type="submit" class="button upload-btn">Upload CV</button>
+            </form>
+        </div>
+        <a href="{{ url_for('index') }}" class="button back-btn">Back to Job Board</a>
+
     </div>
+
 </body>
 </html>

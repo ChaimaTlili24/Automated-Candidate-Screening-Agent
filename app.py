@@ -1,7 +1,33 @@
-from flask import Flask, render_template, request, g, abort
+from flask import Flask, render_template, request, g, abort, redirect, url_for
+from werkzeug.utils import secure_filename
+import os
+import pytesseract
+import pdfplumber
+from pdf2image import convert_from_path
+from PIL import Image
+from docx import Document
+import re
+from pymongo import MongoClient
+from flask import get_flashed_messages, flash
+
+UPLOAD_FOLDER = "uploads"
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+import pytesseract
+
+pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+
+# MongoDB
+mongo_client = MongoClient("mongodb://localhost:27017/")
+db_mongo = mongo_client["cv_database"]
+collection_cv = db_mongo["candidates"]
+
 import sqlite3
 
 app = Flask(__name__)
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+app.secret_key = "chaima_tlili_cv_flash_123456"
+
 DATABASE = r"C:\Users\ROYAUME MEDIAS\OneDrive\Desktop\Similarity\jobs.db"
 
 # Couleurs pour chaque domaine
@@ -132,6 +158,111 @@ def job_detail(job_id):
         job_domain=job_domain,
         domain_colors=DOMAIN_COLORS
     )
+def extract_text_from_pdf(pdf_path):
+    text = ""
+    try:
+        with pdfplumber.open(pdf_path) as pdf:
+            for page in pdf.pages:
+                text += page.extract_text() or ""
+    except Exception:
+        try:
+            images = convert_from_path(pdf_path)
+            for img in images:
+                text += pytesseract.image_to_string(img, lang='eng')
+        except:
+            pass
+    return text
+
+
+def extract_text_from_docx(docx_path):
+    text = ""
+    try:
+        doc = Document(docx_path)
+        for para in doc.paragraphs:
+            text += para.text + "\n"
+    except:
+        pass
+    return text
+
+
+def extract_info(cv_path):
+    ext = cv_path.lower()
+
+    if ext.endswith((".jpg", ".png", ".jpeg")):
+        img = Image.open(cv_path)
+        text = pytesseract.image_to_string(img)
+
+    elif ext.endswith(".pdf"):
+        text = extract_text_from_pdf(cv_path)
+
+    elif ext.endswith(".docx"):
+        text = extract_text_from_docx(cv_path)
+
+    else:
+        return None
+
+    # Nettoyage
+    text_clean = text.replace("\x0c", "\n").strip()
+    lines = [l.strip() for l in text_clean.split("\n") if l.strip()]
+
+    # Nom = première ligne non vide
+    name = lines[0] if lines else ""
+
+    # Email
+    email_pattern = r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
+    emails = re.findall(email_pattern, text_clean)
+    email = emails[0] if emails else ""
+
+    # Skills
+    skills = []
+    capture = False
+    for line in lines:
+        if "skill" in line.lower():
+            capture = True
+            continue
+        if capture:
+            if any(k in line.lower() for k in ["experience", "education", "projects"]):
+                break
+            skills.append(line)
+
+    return {
+        "name": name,
+        "email": email,
+        "skills": skills
+    }
+@app.route("/upload_cv", methods=["POST"])
+def upload_cv():
+    file = request.files.get("cv_file")
+
+    if not file:
+        return "Aucun fichier reçu"
+
+    filename = secure_filename(file.filename)
+    file_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+    file.save(file_path)
+
+    # Extraction
+    extracted = extract_info(file_path)
+
+    return render_template("cv_form.html", extracted=extracted)
+@app.route("/save_cv", methods=["POST"])
+def save_cv():
+    name = request.form.get("name")
+    email = request.form.get("email")
+    skills = request.form.get("skills").split(",")
+
+    document = {
+        "name": name,
+        "email": email,
+        "skills": skills
+    }
+
+    collection_cv.insert_one(document)
+
+    # Message flash
+    flash("✅ Vos informations ont bien été sauvegardées !")
+
+    return redirect(url_for("index"))
 
 if __name__ == '__main__':
     app.run(debug=True)

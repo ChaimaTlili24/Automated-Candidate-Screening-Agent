@@ -10,6 +10,18 @@
     <div class="container">
         <h1>Job Board</h1>
 
+        <!-- ✅ Affichage des messages flash -->
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <div class="flash-messages">
+              {% for message in messages %}
+                <p>{{ message }}</p>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+        <!-- ✅ Fin messages flash -->
+
         <!-- Formulaire de recherche et filtre -->
         <form method="get" class="search-form">
             <input type="text" name="search" placeholder="Search jobs..." value="{{ search }}">
@@ -34,7 +46,6 @@
                                 {{ job[3] }}
                             </span>
                         </div>
-                        <!-- Bouton standard pour tous les jobs -->
                         <a href="{{ url_for('job_detail', job_id=job[0]) }}" class="apply-btn">View Job</a>
                     </div>
                 {% endfor %}

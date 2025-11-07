@@ -3,33 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Job Board</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>CareerHub - Find Your Dream Job</title>
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,500,600,700,800" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
 </head>
 <body>
-
-    <!-- ✅ NAVBAR AVEC SIGN IN / SIGN UP -->
+    <!-- Navigation Bar -->
     <nav class="navbar">
-
-        <div class="auth-buttons">
-            {% if session.get("user_email") %}
-                <!-- ✅ Si l'utilisateur est connecté -->
-                <span class="welcome">Bonjour, {{ session.get("user_email") }}</span>
-                <a href="/logout" class="btn-auth logout">Logout</a>
-
-            {% else %}
-                <!-- ✅ Si aucune session : affichage Sign In / Sign Up -->
-                <a href="/login" class="btn-auth">Sign In</a>
-                <a href="/signup" class="btn-auth signup">Sign Up</a>
-            {% endif %}
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-briefcase"></i>
+                </div>
+                <div class="logo-text">CareerHub</div>
+            </a>
+            
+            <div class="auth-buttons">
+                {% if session.get("user_email") %}
+                    <span class="welcome">Welcome, {{ session.get("user_fullname", session.get("user_email")) }}</span>
+                    <a href="/dashboard" class="btn-auth">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                    <a href="/logout" class="btn-auth logout">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                {% else %}
+                    <a href="/login" class="btn-auth">Sign In</a>
+                    <a href="/signup" class="btn-auth signup">Sign Up</a>
+                {% endif %}
+            </div>
         </div>
-
     </nav>
 
-    <div class="container">
-        <h1>Job Board</h1>
+    <!-- Enhanced Header -->
+    <header class="header">
+        <div class="header-content">
+            <h1>Find Your Dream Career</h1>
+            <p>Join thousands of professionals who found their perfect job through CareerHub</p>
 
-        <!-- ✅ Affichage des messages flash -->
+            <div class="header-stats">
+                <div class="stat">
+                    <span class="stat-number">10K+</span>
+                    <span class="stat-label">Jobs Available</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">5K+</span>
+                    <span class="stat-label">Companies</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">25K+</span>
+                    <span class="stat-label">Candidates Hired</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container">
+        <h1 class="page-title">CareerHub</h1>
+
+        <!-- Flash messages display -->
         {% with messages = get_flashed_messages() %}
           {% if messages %}
             <div class="flash-messages">
@@ -39,9 +73,8 @@
             </div>
           {% endif %}
         {% endwith %}
-        <!-- ✅ Fin messages flash -->
 
-        <!-- Formulaire de recherche et filtre -->
+        <!-- Search and filter form -->
         <form method="get" class="search-form">
             <input type="text" name="search" placeholder="Search jobs..." value="{{ search }}">
             <select name="domain">
@@ -50,22 +83,74 @@
                     <option value="{{ d }}" {% if d == selected_domain %}selected{% endif %}>{{ d }}</option>
                 {% endfor %}
             </select>
-
             <button type="submit">Filter</button>
         </form>
 
-        <!-- Conteneur des jobs -->
+        <!-- Jobs container -->
         <div class="jobs-container">
             {% if jobs %}
                 {% for job in jobs %}
                     <div class="job-card">
                         <div class="job-header">
-                            <h2>{{ job[1] }}</h2>
+                            <h2 class="job-title">{{ job[1] }}</h2>
                             <span class="domain" style="background: linear-gradient(135deg, {{ domain_colors.get(job[3], '#1f77b4') }}, #1f77b4)">
                                 {{ job[3] }}
                             </span>
                         </div>
-                        <a href="{{ url_for('job_detail', job_id=job[0]) }}" class="apply-btn">View Job</a>
+                        
+                        <!-- Company Info -->
+                        <div class="company-info">
+                            <div class="company-logo">
+                                {{ (job[4] if job[4] else 'Company')[0] }}
+                            </div>
+                            <div class="company-details">
+                                <div class="company-name">
+                                    {{ job[4] if job[4] else 'Tech Company' }}
+                                </div>
+                                <div class="job-meta">
+                                    <span>{{ job[3] if job[3] else 'Technology' }}</span>
+                                    <span>•</span>
+                                    <span>{{ range(1, 31)|random }} days ago</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Job Details -->
+                        <div class="job-details">
+                            {% if job[5] %}
+                            <div class="detail">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span>{{ job[5] }}</span>
+                            </div>
+                            {% endif %}
+                            
+                            {% if job[7] %}
+                            <div class="detail salary">
+                                <i class="fas fa-dollar-sign"></i>
+                                <span>{{ job[7] }}</span>
+                            </div>
+                            {% else %}
+                            <div class="detail salary">
+                                <i class="fas fa-dollar-sign"></i>
+                                <span>${{ range(60, 250)|random }}k</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Job Footer -->
+                        <div class="job-footer">
+                            <div class="posted-date">
+                                {{ range(1, 31)|random }} days ago
+                            </div>
+                            <div class="job-actions">
+                                <button class="save-btn" title="Save job">
+                                    <i class="far fa-bookmark"></i>
+                                </button>
+                                <a href="{{ url_for('job_detail', job_id=job[0]) }}" class="apply-btn">
+                                    <i class="fas fa-paper-plane"></i> Apply now
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 {% endfor %}
             {% else %}
@@ -103,5 +188,138 @@
             {% endif %}
         </div>
     </div>
+
+    <!-- Testimonials Section -->
+    <section class="testimonials">
+        <div class="testimonials-container">
+            <h2>Success Stories</h2>
+            <div class="testimonials-grid">
+                <div class="testimonial-card">
+                    <div class="testimonial-avatar">S</div>
+                    <p class="testimonial-text">"CareerHub helped me land my dream job at Google. The platform made it so easy to find opportunities that matched my skills and career goals."</p>
+                    <div class="testimonial-author">Sarah Johnson</div>
+                    <div class="testimonial-role">Senior UX Designer at Google</div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="testimonial-avatar">M</div>
+                    <p class="testimonial-text">"After months of searching, I found the perfect remote position through CareerHub. The application process was seamless and I got hired within 2 weeks!"</p>
+                    <div class="testimonial-author">Michael Chen</div>
+                    <div class="testimonial-role">Full Stack Developer at Shopify</div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="testimonial-avatar">E</div>
+                    <p class="testimonial-text">"CareerHub's personalized job recommendations led me to a career-changing opportunity. I doubled my salary and finally found work-life balance."</p>
+                    <div class="testimonial-author">Emily Rodriguez</div>
+                    <div class="testimonial-role">Product Manager at Airbnb</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-column">
+                <h3>CareerHub</h3>
+                <p>Connecting talented professionals with top companies worldwide. Find your dream job today!</p>
+                <div class="social-links">
+                    <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+            
+            <div class="footer-column">
+                <h3>For Job Seekers</h3>
+                <ul class="footer-links">
+                    <li><a href="/">Browse Jobs</a></li>
+                    <li><a href="#">Career Advice</a></li>
+                    <li><a href="#">Resume Builder</a></li>
+                    <li><a href="#">Job Alerts</a></li>
+                    <li><a href="#">Saved Jobs</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-column">
+                <h3>For Employers</h3>
+                <ul class="footer-links">
+                    <li><a href="#">Post a Job</a></li>
+                    <li><a href="#">Browse Candidates</a></li>
+                    <li><a href="#">Pricing Plans</a></li>
+                    <li><a href="#">Employer Resources</a></li>
+                    <li><a href="#">Recruitment Solutions</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-column">
+                <h3>Company</h3>
+                <ul class="footer-links">
+                    <li><a href="#">About Us</a></li>
+                    <li><a href="#">Contact</a></li>
+                    <li><a href="#">Careers</a></li>
+                    <li><a href="#">Blog</a></li>
+                    <li><a href="#">Help Center</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="copyright">
+            <p>&copy; 2023 CareerHub. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const saveButtons = document.querySelectorAll('.save-btn');
+        
+        saveButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const icon = this.querySelector('i');
+                
+                if (icon.classList.contains('far')) {
+                    icon.classList.remove('far');
+                    icon.classList.add('fas');
+                    this.style.background = 'var(--primary-coral)';
+                    this.style.color = 'white';
+                    
+                    const originalTitle = this.getAttribute('title');
+                    this.setAttribute('title', 'Saved!');
+                    
+                    setTimeout(() => {
+                        this.setAttribute('title', originalTitle);
+                    }, 2000);
+                } else {
+                    icon.classList.remove('fas');
+                    icon.classList.add('far');
+                    this.style.background = 'var(--light-coral)';
+                    this.style.color = 'var(--primary-coral)';
+                }
+            });
+        });
+        
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        const jobCards = document.querySelectorAll('.job-card');
+        jobCards.forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            observer.observe(card);
+        });
+    });
+    </script>
 </body>
 </html>

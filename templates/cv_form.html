@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vérifier les informations extraites</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Vérifier les informations extraites - CareerHub</title>
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,500,600,700,800" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='extract.css') }}">
 </head>
 <body>
 
@@ -12,39 +14,312 @@
     <div class="verify-container">
         <h2>Vérifiez les informations extraites</h2>
         
-        <form action="{{ url_for('save_cv') }}" method="POST" class="verify-form">
+        <div id="message" class="message" style="display:none;"></div>
 
-            <!-- ✅ NAME depuis session -->
-            <div class="form-group">
-                <label for="name" class="form-label">Nom :</label>
-                <input type="text" id="name" name="name" 
-                       value="{{ name }}" 
-                       class="form-input" required>
+        <!-- CORRECTION : Formulaire en POST vers upload_cv SANS job_id dans l'URL -->
+        <form id="cvForm" class="verify-form" method="POST" action="{{ url_for('upload_cv') }}" enctype="multipart/form-data">
+            <!-- === CHAMP CACHÉ : JOB_ID (ESSENTIEL) === -->
+            {% if selected_job %}
+                <input type="hidden" name="job_id" value="{{ selected_job.id }}">
+                <input type="hidden" name="job_title" value="{{ selected_job.title }}">
+            {% else %}
+                <!-- Si pas de selected_job, essayer de récupérer depuis l'URL -->
+                {% if request.args.get('job_id') %}
+                    <input type="hidden" name="job_id" value="{{ request.args.get('job_id') }}">
+                {% endif %}
+            {% endif %}
+
+            <!-- === INFOS PERSONNELLES === -->
+            <div id="personalInfoSection">
+                <div class="form-group">
+                    <label class="form-label">Nom :</label>
+                    <input type="text" id="name" name="name" value="{{ name }}" class="form-input" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Email :</label>
+                    <input type="email" id="email" name="email" value="{{ email }}" class="form-input" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Compétences :</label>
+                    <div class="skills-container" id="skillsContainer"></div>
+                    <div class="skills-hint">Cliquez pour ajouter, Entrée ou virgule. Les points sont supprimés.</div>
+                    <input type="hidden" id="skills" name="skills">
+                </div>
+
+                <button type="button" id="validateInfoBtn" class="button secondary-btn">
+                    Valider les informations
+                </button>
             </div>
 
-            <!-- ✅ EMAIL depuis session -->
-            <div class="form-group">
-                <label for="email" class="form-label">Email :</label>
-                <input type="email" id="email" name="email" 
-                       value="{{ email }}" 
-                       class="form-input" required>
-            </div>
+            <!-- === SECTION COVER LETTERS === -->
+            <div id="coverSection" style="display:none;">
+                <hr class="section-divider">
 
-            <!-- ✅ SKILLS depuis extraction CV -->
-            <div class="form-group">
-                <label for="skills" class="form-label">Compétences :</label>
-                <textarea id="skills" name="skills" rows="4" class="form-textarea">
-{{ skills | join(", ") }}
-                </textarea>
-            </div>
+                <!-- JOB SÉLECTIONNÉ -->
+                {% if selected_job %}
+                <div class="form-group">
+                    <label class="form-label">Poste sélectionné :</label>
+                    <div id="jobDisplay" class="job-card"></div>
+                </div>
+                {% else %}
+                <div class="warning" style="color: #e67e22; font-size: 0.9em; margin: 10px 0; padding: 8px; background: #fff3cd; border-radius: 6px;">
+                    Aucun poste sélectionné. La génération de lettre ne sera pas disponible.
+                </div>
+                {% endif %}
 
-            <button type="submit" class="button save-btn">
-                <span class="btn-icon">💾</span>
-                Enregistrer dans MongoDB
-            </button>
+                <!-- CHOIX : GÉNÉRER OU UPLOAD -->
+                <div class="form-group">
+                    <label class="form-label">Lettre de motivation :</label>
+                    <div class="flex space-x-4 mb-3">
+                        <label><input type="radio" name="generate_cover" value="yes" onchange="toggleCoverOptions()"> Générer avec IA</label>
+                        <label><input type="radio" name="generate_cover" value="no" onchange="toggleCoverOptions()" checked> Uploader manuellement</label>
+                    </div>
+                </div>
+
+                <!-- === UPLOAD (par défaut) === -->
+                <div id="upload-section">
+                    <div class="file-upload-group">
+                        <input type="file" name="cover_file" id="cover_file" accept=".pdf" class="file-input">
+                        <button type="button" id="uploadCoverBtn" class="button secondary-btn">UPLOAD</button>
+                    </div>
+                </div>
+
+                <!-- === GÉNÉRER (caché) === -->
+                <div id="generate-section" style="display:none;">
+                    <button type="submit" name="action" value="generate_cover" class="button primary-btn" id="generateBtn">
+                        Générer la lettre de motivation
+                    </button>
+                    <div id="generating" style="display:none; color:#e67e22; margin-top:10px; font-style:italic;">
+                        Génération en cours... (5-15s)
+                    </div>
+                </div>
+
+                <!-- === PRÉVISUALISATION === -->
+                <div id="preview-section" style="display:none; margin-top:15px; padding:15px; background:#f9f9f9; border-radius:8px; border:1px solid #ddd;">
+                    <h4 style="margin:0 0 10px 0; color:#333;">Prévisualisation de la lettre générée :</h4>
+                    <pre id="preview-content" style="white-space: pre-wrap; font-family: inherit; margin:0; max-height:300px; overflow-y:auto;"></pre>
+                </div>
+
+                <!-- === LISTE DES COVERS === -->
+                <div class="form-group mt-4">
+                    <label class="form-label">Cover Letters ajoutées :</label>
+                    <div id="coverList" class="cover-list"></div>
+                </div>
+
+                <button type="submit" 
+                        name="action" 
+                        value="save_all_data" 
+                        id="saveAllBtn" 
+                        class="button save-btn" 
+                        disabled>
+                    SAUVEGARDER TOUT DANS MONGODB
+                </button>
+            </div>
         </form>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const messageDiv = document.getElementById("message");
+    const personalInfoSection = document.getElementById("personalInfoSection");
+    const coverSection = document.getElementById("coverSection");
+    const validateInfoBtn = document.getElementById("validateInfoBtn");
+    const nameInput = document.getElementById("name");
+    const emailInput = document.getElementById("email");
+    const skillsContainer = document.getElementById('skillsContainer');
+    const skillsInput = document.getElementById('skills');
+    const coverList = document.getElementById('coverList');
+    const saveAllBtn = document.getElementById('saveAllBtn');
+    const jobDisplay = document.getElementById('jobDisplay');
+    const generateBtn = document.getElementById('generateBtn');
+    const generating = document.getElementById('generating');
+    const previewSection = document.getElementById('preview-section');
+    const previewContent = document.getElementById('preview-content');
+
+    let skills = `{{ skills | join(', ') }}`
+        .split(',')
+        .map(s => s.trim().replace(/\./g, ''))
+        .filter(s => s);
+
+    let isValidated = false;
+
+    // === AFFICHAGE JOB ===
+    {% if selected_job %}
+    jobDisplay.innerHTML = `
+        <strong style="font-size:16px;">{{ selected_job.title }}</strong>
+        <br><small style="color:#e67e22;">{{ selected_job.company or '' }}</small>
+        <br><br>
+        <small style="color:#555; line-height:1.5;">
+            {{ selected_job.description[:400] }}${ {{ selected_job.description|length }} > 400 ? '...' : '' }
+        </small>
+        <br><br>
+        <small style="color:#999;">Publié le : {{ selected_job.posted_date or 'N/A' }}</small>
+    `;
+    {% endif %}
+
+    // === SKILLS ===
+    function renderSkills() {
+        skillsContainer.innerHTML = '';
+        skills.forEach((skill, i) => {
+            const tag = document.createElement('div');
+            tag.className = 'skill-tag';
+            tag.innerHTML = !isValidated 
+                ? `${skill}<button type="button" class="skill-remove" data-index="${i}">X</button>`
+                : skill;
+            skillsContainer.appendChild(tag);
+        });
+
+        if (!isValidated) {
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'skill-input';
+            input.placeholder = skills.length === 0 ? 'Ajouter une compétence...' : '';
+            input.addEventListener('keydown', e => {
+                if (e.key === 'Enter' || e.key === ',') {
+                    e.preventDefault();
+                    const val = e.target.value.trim();
+                    if (val) addSkill(val);
+                    e.target.value = '';
+                }
+            });
+            input.addEventListener('blur', () => {
+                const val = input.value.trim();
+                if (val) addSkill(val);
+            });
+            input.addEventListener('input', e => {
+                e.target.value = e.target.value.replace(/\./g, '');
+            });
+            skillsContainer.appendChild(input);
+        }
+
+        skillsInput.value = skills.join(", ");
+    }
+
+    function addSkill(text) {
+        const skill = text.replace(/\./g, '').replace(',', '').trim();
+        if (skill && !skills.includes(skill)) {
+            skills.push(skill);
+            renderSkills();
+        }
+    }
+
+    skillsContainer.addEventListener('click', e => {
+        if (e.target.closest('.skill-remove') && !isValidated) {
+            const i = parseInt(e.target.closest('.skill-remove').dataset.index);
+            skills.splice(i, 1);
+            renderSkills();
+        }
+    });
+
+    // === VALIDER INFOS ===
+    validateInfoBtn.onclick = () => {
+        const name = nameInput.value.trim();
+        const email = emailInput.value.trim();
+
+        if (!name || !email) return showMessage("Nom et email requis", "error");
+        if (!/^\S+@\S+\.\S+$/.test(email)) return showMessage("Email invalide", "error");
+
+        isValidated = true;
+        nameInput.readOnly = emailInput.readOnly = true;
+        validateInfoBtn.style.display = "none";
+        personalInfoSection.style.opacity = "0.7";
+        coverSection.style.display = "block";
+        saveAllBtn.disabled = false;
+
+        renderSkills();
+        showMessage("Informations validées !", "success");
+    };
+
+    // === UPLOAD COVER ===
+    document.getElementById("uploadCoverBtn").onclick = () => {
+        if (!isValidated) return showMessage("Validez d'abord", "error");
+        const file = document.getElementById("cover_file").files[0];
+        if (!file) return showMessage("Choisissez un fichier", "error");
+
+        const fd = new FormData();
+        fd.append("cover_file", file);
+        // AJOUTER LE JOB_ID AU FORM DATA
+        const jobIdInput = document.querySelector('input[name="job_id"]');
+        if (jobIdInput && jobIdInput.value) {
+            fd.append("job_id", jobIdInput.value);
+        }
+
+        fetch("/upload_cover_letter", { method: "POST", body: fd })
+            .then(r => r.json())
+            .then(d => {
+                showMessage(d.message, d.success ? "success" : "error");
+                if (d.success) addCoverToList(d.cover);
+            });
+    };
+
+    // === AJOUTER COVER À LA LISTE ===
+    function addCoverToList(cover) {
+        const div = document.createElement('div');
+        div.className = 'cover-item';
+
+        const type = cover.type === 'uploaded' ? 'Uploadé' : 'Généré';
+        const title = cover.type === 'uploaded' ? cover.uploaded_filename : (cover.job_title || "Lettre générée");
+        const date = new Date(cover.type === 'uploaded' ? cover.uploaded_at : cover.generated_at)
+            .toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' });
+
+        div.innerHTML = `
+            <div>
+                <strong>${type}</strong> : ${title}
+                <br><small style="color:#777;">${date}</small>
+                ${cover.pdf_path ? ` | <a href="${cover.pdf_path}" target="_blank" style="color:#e67e22;">PDF</a>` : ''}
+            </div>
+            <button type="button" class="remove">X</button>
+        `;
+
+        div.querySelector('.remove').onclick = () => div.remove();
+        coverList.appendChild(div);
+
+        // === PRÉVISUALISATION SI GÉNÉRÉE ===
+        if (cover.type === 'generated' && cover.content) {
+            previewContent.textContent = cover.content;
+            previewSection.style.display = 'block';
+            generateBtn.style.display = 'none';
+            generating.style.display = 'none';
+        }
+    }
+
+    // === CHARGER LES ANCIENNES COVERS ===
+    {% if cover_letters %}
+    try {
+        const covers = {{ cover_letters | tojson | safe }};
+        if (Array.isArray(covers)) {
+            covers.forEach(cover => addCoverToList(cover));
+        }
+    } catch(e) { console.error("Erreur chargement covers:", e); }
+    {% endif %}
+
+    // === MESSAGE ===
+    function showMessage(text, type) {
+        messageDiv.textContent = text;
+        messageDiv.className = `message ${type}`;
+        messageDiv.style.display = 'block';
+        setTimeout(() => messageDiv.style.display = 'none', 5000);
+    }
+
+    // === TOGGLE GÉNÉRER / UPLOAD ===
+    window.toggleCoverOptions = () => {
+        const generate = document.querySelector('input[value="yes"]').checked;
+        document.getElementById('generate-section').style.display = generate ? 'block' : 'none';
+        document.getElementById('upload-section').style.display = generate ? 'none' : 'block';
+        if (!generate) {
+            previewSection.style.display = 'none';
+            generateBtn.style.display = 'block';
+            generating.style.display = 'none';
+        }
+    };
+
+    // === INIT ===
+    renderSkills();
+});
+</script>
 
 </body>
 </html>

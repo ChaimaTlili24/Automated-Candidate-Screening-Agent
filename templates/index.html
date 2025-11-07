@@ -7,6 +7,25 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+
+    <!-- ✅ NAVBAR AVEC SIGN IN / SIGN UP -->
+    <nav class="navbar">
+
+        <div class="auth-buttons">
+            {% if session.get("user_email") %}
+                <!-- ✅ Si l'utilisateur est connecté -->
+                <span class="welcome">Bonjour, {{ session.get("user_email") }}</span>
+                <a href="/logout" class="btn-auth logout">Logout</a>
+
+            {% else %}
+                <!-- ✅ Si aucune session : affichage Sign In / Sign Up -->
+                <a href="/login" class="btn-auth">Sign In</a>
+                <a href="/signup" class="btn-auth signup">Sign Up</a>
+            {% endif %}
+        </div>
+
+    </nav>
+
     <div class="container">
         <h1>Job Board</h1>
 

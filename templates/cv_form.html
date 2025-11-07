@@ -13,19 +13,29 @@
         <h2>Vérifiez les informations extraites</h2>
         
         <form action="{{ url_for('save_cv') }}" method="POST" class="verify-form">
+
+            <!-- ✅ NAME depuis session -->
             <div class="form-group">
                 <label for="name" class="form-label">Nom :</label>
-                <input type="text" id="name" name="name" value="{{ extracted.name }}" class="form-input" required>
+                <input type="text" id="name" name="name" 
+                       value="{{ name }}" 
+                       class="form-input" required>
             </div>
 
+            <!-- ✅ EMAIL depuis session -->
             <div class="form-group">
                 <label for="email" class="form-label">Email :</label>
-                <input type="email" id="email" name="email" value="{{ extracted.email }}" class="form-input" required>
+                <input type="email" id="email" name="email" 
+                       value="{{ email }}" 
+                       class="form-input" required>
             </div>
 
+            <!-- ✅ SKILLS depuis extraction CV -->
             <div class="form-group">
                 <label for="skills" class="form-label">Compétences :</label>
-                <textarea id="skills" name="skills" rows="4" class="form-textarea">{{ extracted.skills | join(", ") }}</textarea>
+                <textarea id="skills" name="skills" rows="4" class="form-textarea">
+{{ skills | join(", ") }}
+                </textarea>
             </div>
 
             <button type="submit" class="button save-btn">

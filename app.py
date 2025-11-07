@@ -1,5 +1,7 @@
-from flask import Flask, render_template, request, g, abort, redirect, url_for
+from flask import Flask, render_template, request, g, abort, redirect, url_for, session, flash
 from werkzeug.utils import secure_filename
+from werkzeug.security import generate_password_hash, check_password_hash
+from pymongo import MongoClient
 import os
 import pytesseract
 import pdfplumber
@@ -7,67 +9,91 @@ from pdf2image import convert_from_path
 from PIL import Image
 from docx import Document
 import re
-from pymongo import MongoClient
-from flask import get_flashed_messages, flash
+import sqlite3
+import markdown2
+
+# --------------------------------------
+# ✅ CONFIG FLASK
+# --------------------------------------
+app = Flask(__name__)
+app.secret_key = "secret123"   # Sessions + flash
 
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
-import pytesseract
-
+# --------------------------------------
+# ✅ TESSERACT PATH
+# --------------------------------------
 pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
-# MongoDB
+# --------------------------------------
+# ✅ MONGODB (CV + Users)
+# --------------------------------------
 mongo_client = MongoClient("mongodb://localhost:27017/")
 db_mongo = mongo_client["cv_database"]
-collection_cv = db_mongo["candidates"]
 
-import sqlite3
+collection_cv = db_mongo["candidates"]   # CV sauvegardés
+users_col = db_mongo["users"]            # Utilisateurs (Candidat + RH)
 
-app = Flask(__name__)
-app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-app.secret_key = "chaima_tlili_cv_flash_123456"
+# --------------------------------------
+# ✅ Ajout automatique de 2 RH
+# --------------------------------------
+def init_rh_users():
+    existing_rh = users_col.count_documents({"role": "rh"})
+    if existing_rh == 0:
+        rh1 = {
+            "fullname": "RH Admin 1",
+            "email": "rh1@company.com",
+            "password": generate_password_hash("1234"),
+            "role": "rh"
+        }
+        rh2 = {
+            "fullname": "RH Admin 2",
+            "email": "rh2@company.com",
+            "password": generate_password_hash("1234"),
+            "role": "rh"
+        }
+        users_col.insert_many([rh1, rh2])
+        print("✅ 2 comptes RH créés automatiquement !")
 
+init_rh_users()
+
+# --------------------------------------
+# ✅ SQLITE (Jobs)
+# --------------------------------------
 DATABASE = r"C:\Users\ROYAUME MEDIAS\OneDrive\Desktop\Similarity\jobs.db"
 
-# Couleurs pour chaque domaine
-# Couleurs pour chaque domaine
 DOMAIN_COLORS = {
-    "AI": "#1f77b4",             # bleu
-    "Data": "#2ca02c",           # vert
-    "Backend": "#ff7f0e",        # orange
-    "Frontend": "#9467bd",       # violet
-    "Fullstack": "#17becf",      # cyan
-    "Mobile": "#d62728",         # rouge
-    "DevOps": "#8c564b",         # brun
-    "Cloud": "#e377c2",          # rose
-    "Security": "#7f7f7f",       # gris
-    "Infrastructure": "#bcbd22", # jaune-vert
-    "QA / Testing": "#ff69b4",   # rose vif
-    "Management": "#8a2be2",     # violet foncé
-    "ERP": "#ffd700",             # or
-    "Embedded / IoT": "#32cd32", # vert lime
-    "Other": "#000000"            # noir
+    "AI": "#1f77b4",
+    "Data": "#2ca02c",
+    "Backend": "#ff7f0e",
+    "Frontend": "#9467bd",
+    "Fullstack": "#17becf",
+    "Mobile": "#d62728",
+    "DevOps": "#8c564b",
+    "Cloud": "#e377c2",
+    "Security": "#7f7f7f",
+    "Infrastructure": "#bcbd22",
+    "QA / Testing": "#ff69b4",
+    "Management": "#8a2be2",
+    "ERP": "#ffd700",
+    "Embedded / IoT": "#32cd32",
+    "Other": "#000000"
 }
 
-# Tous les domaines disponibles
-ALL_DOMAINS = [
-    "AI", "Data", "Backend", "Frontend", "Fullstack", "Mobile", "DevOps",
-    "Cloud", "Security", "Infrastructure", "QA / Testing", "Management",
-    "ERP", "Embedded / IoT", "Other"
-]
+ALL_DOMAINS = list(DOMAIN_COLORS.keys())
 
-# ---------- DB Helper ----------
 def get_db():
-    db = getattr(g, '_database', None)
+    db = getattr(g, "_database", None)
     if db is None:
         db = g._database = sqlite3.connect(DATABASE)
-        db.row_factory = sqlite3.Row  # accéder aux colonnes par nom
+        db.row_factory = sqlite3.Row
     return db
 
 @app.teardown_appcontext
 def close_connection(exception):
-    db = getattr(g, '_database', None)
+    db = getattr(g, "_database", None)
     if db is not None:
         db.close()
 
@@ -76,14 +102,18 @@ def get_all_jobs(search='', domain='', offset=0, limit=9):
     cursor = db.cursor()
     query = "SELECT id, title, description, domain FROM jobs WHERE 1=1"
     params = []
+
     if search:
         query += " AND (title LIKE ? OR description LIKE ?)"
-        params.extend([f"%{search}%", f"%{search}%"])
+        params += [f"%{search}%", f"%{search}%"]
+
     if domain:
         query += " AND domain = ?"
         params.append(domain)
+
     query += " LIMIT ? OFFSET ?"
-    params.extend([limit, offset])
+    params += [limit, offset]
+
     cursor.execute(query, params)
     return cursor.fetchall()
 
@@ -92,17 +122,17 @@ def count_jobs(search='', domain=''):
     cursor = db.cursor()
     query = "SELECT COUNT(*) FROM jobs WHERE 1=1"
     params = []
+
     if search:
         query += " AND (title LIKE ? OR description LIKE ?)"
-        params.extend([f"%{search}%", f"%{search}%"])
+        params += [f"%{search}%", f"%{search}%"]
+
     if domain:
         query += " AND domain = ?"
         params.append(domain)
+
     cursor.execute(query, params)
     return cursor.fetchone()[0]
-
-def get_domains():
-    return ALL_DOMAINS
 
 def get_job_by_id(job_id):
     db = get_db()
@@ -110,7 +140,9 @@ def get_job_by_id(job_id):
     cursor.execute("SELECT * FROM jobs WHERE id = ?", (job_id,))
     return cursor.fetchone()
 
-# ---------- Routes ----------
+# --------------------------------------
+# ✅ ROUTE ACCUEIL (Jobs + Recherche)
+# --------------------------------------
 @app.route('/', methods=['GET'])
 def index():
     search = request.args.get('search', '')
@@ -123,12 +155,11 @@ def index():
     offset = (page - 1) * per_page
 
     jobs = get_all_jobs(search, domain, offset=offset, limit=per_page)
-    domains = get_domains()
 
     return render_template(
-        'index.html',
+        "index.html",
         jobs=jobs,
-        domains=domains,
+        domains=ALL_DOMAINS,
         search=search,
         selected_domain=domain,
         domain_colors=DOMAIN_COLORS,
@@ -136,61 +167,57 @@ def index():
         total_pages=total_pages
     )
 
-import markdown2
-
+# --------------------------------------
+# ✅ JOB DETAILS
+# --------------------------------------
 @app.route('/job/<int:job_id>')
 def job_detail(job_id):
     job = get_job_by_id(job_id)
     if not job:
         abort(404)
 
-    job_title = job['title']
-    job_description = job['description']
-    job_domain = job['domain']
-
-    # Convertir Markdown en HTML
-    job_description_html = markdown2.markdown(job_description)
+    job_description_html = markdown2.markdown(job["description"])
 
     return render_template(
-        'job_detail.html',
-        job_title=job_title,
-        job_description_html=job_description_html,  # Bien passer la version HTML
-        job_domain=job_domain,
+        "job_detail.html",
+        job_title=job["title"],
+        job_description_html=job_description_html,
+        job_domain=job["domain"],
         domain_colors=DOMAIN_COLORS
     )
+
+# --------------------------------------
+# ✅ EXTRACTION CV
+# --------------------------------------
 def extract_text_from_pdf(pdf_path):
     text = ""
     try:
         with pdfplumber.open(pdf_path) as pdf:
             for page in pdf.pages:
                 text += page.extract_text() or ""
-    except Exception:
+    except:
         try:
             images = convert_from_path(pdf_path)
             for img in images:
-                text += pytesseract.image_to_string(img, lang='eng')
+                text += pytesseract.image_to_string(img, lang="eng")
         except:
             pass
     return text
 
 
 def extract_text_from_docx(docx_path):
-    text = ""
     try:
         doc = Document(docx_path)
-        for para in doc.paragraphs:
-            text += para.text + "\n"
+        return "\n".join([p.text for p in doc.paragraphs])
     except:
-        pass
-    return text
+        return ""
 
 
 def extract_info(cv_path):
     ext = cv_path.lower()
 
-    if ext.endswith((".jpg", ".png", ".jpeg")):
-        img = Image.open(cv_path)
-        text = pytesseract.image_to_string(img)
+    if ext.endswith((".jpg", ".jpeg", ".png")):
+        text = pytesseract.image_to_string(Image.open(cv_path))
 
     elif ext.endswith(".pdf"):
         text = extract_text_from_pdf(cv_path)
@@ -201,39 +228,35 @@ def extract_info(cv_path):
     else:
         return None
 
-    # Nettoyage
-    text_clean = text.replace("\x0c", "\n").strip()
-    lines = [l.strip() for l in text_clean.split("\n") if l.strip()]
+    text = text.replace("\x0c", "\n").strip()
+    lines = [l.strip() for l in text.split("\n") if l.strip()]
 
-    # Nom = première ligne non vide
-    name = lines[0] if lines else ""
-
-    # Email
-    email_pattern = r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
-    emails = re.findall(email_pattern, text_clean)
-    email = emails[0] if emails else ""
-
-    # Skills
+    # ✅ On ignore NAME et EMAIL → ils viendront du user connecté
+    # ------------------------------------------------------------
+    
+    # ✅ Extract SKILLS uniquement
     skills = []
     capture = False
     for line in lines:
         if "skill" in line.lower():
             capture = True
             continue
+        if capture and any(x in line.lower() for x in ["experience", "education"]):
+            break
         if capture:
-            if any(k in line.lower() for k in ["experience", "education", "projects"]):
-                break
             skills.append(line)
 
     return {
-        "name": name,
-        "email": email,
         "skills": skills
     }
+
+
+# ---------------------------------------------------
+# ✅ UPLOAD CV + EXTRACTION
+# ---------------------------------------------------
 @app.route("/upload_cv", methods=["POST"])
 def upload_cv():
     file = request.files.get("cv_file")
-
     if not file:
         return "Aucun fichier reçu"
 
@@ -241,15 +264,29 @@ def upload_cv():
     file_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
     file.save(file_path)
 
-    # Extraction
     extracted = extract_info(file_path)
 
-    return render_template("cv_form.html", extracted=extracted)
+    return render_template(
+    "cv_form.html",
+    name=session.get("user_fullname"),
+    email=session.get("user_email"),
+    skills=extracted["skills"]
+)
+
+
+# ---------------------------------------------------
+# ✅ SAVE CV = name + email from session
+# ---------------------------------------------------
 @app.route("/save_cv", methods=["POST"])
 def save_cv():
-    name = request.form.get("name")
-    email = request.form.get("email")
-    skills = request.form.get("skills").split(",")
+
+    # ✅ Name & Email → depuis user connecté
+    name = session.get("user_fullname")
+    email = session.get("user_email")
+
+    # ✅ Skills extraites du formulaire
+    skills_raw = request.form.get("skills")
+    skills = skills_raw.split(",") if skills_raw else []
 
     document = {
         "name": name,
@@ -259,12 +296,105 @@ def save_cv():
 
     collection_cv.insert_one(document)
 
-    # Message flash
     flash("✅ Vos informations ont bien été sauvegardées !")
-
     return redirect(url_for("index"))
 
+# --------------------------------------
+# ✅ SIGN UP (CANDIDATS)
+# --------------------------------------
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == 'POST':
+        fullname = request.form['fullname']
+        email = request.form['email']
+        password = request.form['password']
+
+        # Vérifier email existant
+        if users_col.find_one({"email": email}):
+            flash("⚠️ Cet email est déjà utilisé")
+            return redirect('/signup')
+
+        # Création du candidat
+        user = {
+            "fullname": fullname,
+            "email": email,
+            "password": generate_password_hash(password),
+            "role": "candidat"
+        }
+        users_col.insert_one(user)
+
+        flash("✅ Compte créé avec succès ! Veuillez vous connecter.")
+        return redirect('/login')
+
+    return render_template("auth.html", mode="signup")
 
 
-if __name__ == '__main__':
+
+
+# --------------------------------------
+# ✅ SIGN IN
+# --------------------------------------
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        email = request.form.get("email")
+        password = request.form.get("password")
+
+        # Chercher l'utilisateur dans MongoDB
+        user = users_col.find_one({"email": email})
+
+        # Vérification email + mot de passe
+        if not user or not check_password_hash(user["password"], password):
+            flash("❌ Email ou mot de passe incorrect")
+            return redirect('/login')
+
+        # ✅ Stocker infos dans la session
+        session["user_email"] = user["email"]
+        session["user_fullname"] = user.get("fullname", "")   # ✅ Ajout du fullname
+        session["role"] = user["role"]
+
+        # ✅ Redirection selon le role
+        if user["role"] == "rh":
+            return redirect('/rh/dashboard')   # Affichera rh_dashbord.html
+
+        return redirect('/')  # ✅ Candidat → page index.html
+
+    # ✅ Utiliser le même template auth.html pour login
+    return render_template("auth.html", mode="login")
+
+
+
+# --------------------------------------
+# ✅ DASHBOARD CANDIDAT
+# --------------------------------------
+@app.route('/candidate/dashboard')
+def candidate_dashboard():
+    if session.get("role") != "candidat":
+        return redirect('/')
+    return render_template("candidate_dashboard.html")
+
+# --------------------------------------
+# ✅ DASHBOARD RH
+# --------------------------------------
+@app.route('/rh/dashboard')
+def rh_dashboard():
+    if session.get("role") != "rh":
+        return redirect('/')
+
+    candidats = list(users_col.find({"role": "candidat"}))
+    return render_template("rh_dashboard.html", candidats=candidats)
+
+# --------------------------------------
+# ✅ LOGOUT
+# --------------------------------------
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect('/')
+
+
+# --------------------------------------
+# ✅ RUN
+# --------------------------------------
+if __name__ == "__main__":
     app.run(debug=True)

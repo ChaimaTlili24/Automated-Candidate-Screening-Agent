@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication</title>
+
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,800" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='auth.css') }}">
+</head>
+<body>
+
+<div id="auth-wrapper">
+
+    <!-- ✅ SIGN IN FORM -->
+    <div class="wrapperI" id="signin-box">
+        <div class="containerII">
+            <div class="titleII">Hello New Friend!</div>
+            <p class='paragII'>
+                Don't have an account?<br>
+                Create an account with your personal info.<br>
+                Click below!
+            </p>
+            <button class="buttonII" onclick="switchToSignUp()">Sign Up</button>
+        </div>
+
+        <div class="containerI">
+            <div class='titleI'>Sign In</div>
+
+            <div class="form-containerI">
+                <form action="/login" method="POST">
+                    <input type="email" name="email" placeholder="Email" class="inputI" required>
+                    <input type="password" name="password" placeholder="Password" class="inputI" required>
+                    <button class="buttonI" type="submit">Sign In</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ✅ SIGN UP FORM -->
+    <div class="wrapperU hidden" id="signup-box">
+        <div class="containerU">
+            <div class='titleU'>Sign Up</div>
+
+            <div class="form-containerU">
+                <form action="/signup" method="POST">
+
+
+                    <input type="text" name="fullname" placeholder="Full Name" class="inputU" required>
+
+                    <input type="email" name="email" placeholder="Email" class="inputU" required>
+
+                    <input type="password" name="password" placeholder="Password" class="inputU" required>
+
+                    <button class="buttonU" type="submit">Sign Up</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="containerUU">
+            <div class="titleUU">Welcome Back!</div>
+            <p class='paragUU'>
+                Already have an account?<br>
+                Login with your personal info.
+            </p>
+            <button class="buttonUU" onclick="switchToSignIn()">Sign In</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+function switchToSignUp() {
+    document.getElementById("signin-box").classList.add("hidden");
+    document.getElementById("signup-box").classList.remove("hidden");
+}
+
+function switchToSignIn() {
+    document.getElementById("signup-box").classList.add("hidden");
+    document.getElementById("signin-box").classList.remove("hidden");
+}
+</script>
+
+</body>
+</html>

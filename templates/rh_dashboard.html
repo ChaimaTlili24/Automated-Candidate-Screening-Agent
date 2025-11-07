@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RH Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <!-- ✅ NAVBAR RH -->
+    <nav class="navbar">
+        <h2 class="logo">RH Dashboard</h2>
+
+        <div class="nav-right">
+            <span class="welcome">Connecté : {{ session.get("user_email") }}</span>
+            <a href="/logout" class="btn-nav logout">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container">
+
+        <h1>Liste des Candidats</h1>
+
+        {% if candidats %}
+            <table class="candidate-table">
+                <thead>
+                    <tr>
+                        <th>Nom Complet</th>
+                        <th>Email</th>
+                        <th>Date d'inscription</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for c in candidats %}
+                        <tr>
+                            <td>{{ c.fullname }}</td>
+                            <td>{{ c.email }}</td>
+                            <td>{{ c.get("created_at", "—") }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="no-data">Aucun candidat pour le moment.</p>
+        {% endif %}
+
+    </div>
+
+</body>
+</html>

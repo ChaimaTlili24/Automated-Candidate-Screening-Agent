@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generated Cover Letter</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="cover-container">
+    <h1>Cover Letter for {{ job_title }}</h1>
+    <pre class="cover-output">{{ cover_letter }}</pre>
+
+    <a href="{{ url_for('index') }}" class="button back-btn">Retour</a>
+</div>
+
+</body>
+</html>

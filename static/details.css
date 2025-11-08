@@ -1,0 +1,274 @@
+:root {
+    --primary-coral: #FF7F50;
+    --secondary-coral: #FF6347;
+    --light-coral: #FFE8E0;
+    --dark-coral: #E64A19;
+    --background: #FFFFFF;
+    --card-bg: #FFFFFF;
+    --text-dark: #2D3748;
+    --text-light: #718096;
+    --border: #FFD1C1;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Montserrat", sans-serif;
+}
+
+body {
+    background: var(--background);
+    color: var(--text-dark);
+    line-height: 1.6;
+    padding: 20px;
+}
+
+.job-page {
+    max-width: 800px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+    padding: 40px;
+    margin-top: 20px;
+}
+
+h1 {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 15px;
+    background: linear-gradient(to right, var(--primary-coral), var(--secondary-coral));
+    -webkit-background-clip: text;
+    color: transparent;
+}
+
+.domain {
+    background: linear-gradient(to right, var(--primary-coral), var(--secondary-coral));
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    display: inline-block;
+    margin-bottom: 30px;
+}
+
+.job-details {
+    background: #f8f9fa;
+    padding: 30px;
+    border-radius: 12px;
+    margin: 30px 0;
+    border-left: 4px solid var(--primary-coral);
+}
+
+.job-details h2, .job-details h3 {
+    color: var(--text-dark);
+    margin: 20px 0 10px 0;
+}
+
+.job-details h2:first-child {
+    margin-top: 0;
+}
+
+.job-details p {
+    margin-bottom: 15px;
+    color: var(--text-light);
+}
+
+.job-details ul, .job-details ol {
+    margin: 15px 0;
+    padding-left: 20px;
+}
+
+.job-details li {
+    margin-bottom: 8px;
+    color: var(--text-light);
+}
+
+.upload-section {
+    background: var(--light-coral);
+    padding: 25px;
+    border-radius: 12px;
+    margin: 30px 0;
+    border: 2px dashed var(--primary-coral);
+}
+
+.upload-section h3 {
+    color: var(--text-dark);
+    margin-bottom: 20px;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.upload-section h3 i {
+    color: var(--primary-coral);
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+input[type="file"] {
+    padding: 15px;
+    border: 2px dashed var(--border);
+    border-radius: 8px;
+    background: white;
+    font-size: 16px;
+    transition: all 0.3s;
+}
+
+input[type="file"]:focus {
+    border-color: var(--primary-coral);
+    outline: none;
+}
+
+input[type="file"]:hover {
+    border-color: var(--primary-coral);
+}
+
+.button {
+    padding: 15px 30px;
+    border-radius: 30px;
+    text-decoration: none;
+    font-weight: 600;
+    text-align: center;
+    transition: all 0.3s;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.upload-btn {
+    background: linear-gradient(to right, var(--primary-coral), var(--secondary-coral));
+    color: white;
+}
+
+.upload-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(255, 127, 80, 0.3);
+}
+
+.back-btn {
+    background: white;
+    color: var(--primary-coral);
+    border: 2px solid var(--primary-coral);
+}
+
+.back-btn:hover {
+    background: var(--light-coral);
+    transform: translateY(-2px);
+}
+
+/* File upload styling */
+.file-info {
+    margin-top: 10px;
+    font-size: 14px;
+    color: var(--text-light);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.file-info i {
+    color: var(--primary-coral);
+}
+
+.file-display {
+    margin-top: 10px;
+    padding: 10px;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+}
+
+/* Flash Messages */
+.flash-messages {
+    background-color: var(--light-coral);
+    border-left: 4px solid var(--primary-coral);
+    padding: 15px;
+    margin: 20px 0;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.flash-messages p {
+    margin: 5px 0;
+    color: var(--text-dark);
+}
+
+/* Success/Error states */
+.success-message {
+    background-color: #d4edda;
+    border-left: 4px solid #28a745;
+    color: #155724;
+    padding: 15px;
+    margin: 20px 0;
+    border-radius: 8px;
+}
+
+.error-message {
+    background-color: #f8d7da;
+    border-left: 4px solid #dc3545;
+    color: #721c24;
+    padding: 15px;
+    margin: 20px 0;
+    border-radius: 8px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .job-page {
+        padding: 25px;
+        margin: 10px;
+    }
+    
+    h1 {
+        font-size: 28px;
+    }
+    
+    .job-details {
+        padding: 20px;
+    }
+    
+    .upload-section {
+        padding: 20px;
+    }
+    
+    .button {
+        padding: 12px 25px;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .job-page {
+        padding: 20px;
+    }
+    
+    h1 {
+        font-size: 24px;
+    }
+    
+    .button {
+        width: 100%;
+        padding: 12px 20px;
+    }
+    
+    .upload-section h3 {
+        font-size: 18px;
+    }
+    
+    input[type="file"] {
+        padding: 12px;
+    }
+}

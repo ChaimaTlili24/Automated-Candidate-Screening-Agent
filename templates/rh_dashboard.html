@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Recruitment Dashboard - CareerHub</title>
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,500,600,700,800" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='rhdashboard.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <i class="fas fa-robot"></i>
+                CareerHub Dashboard
+            </a>
+            
+            <div class="auth-buttons">
+                <span class="welcome">
+                    Hello, {{ session.get('user_fullname', 'RH User') }}
+                </span>
+                <a href="/" class="btn-auth">
+                    <i class="fas fa-home"></i> Home
+                </a>
+                <a href="/logout" class="btn-auth">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Dashboard Content -->
+    <div class="dashboard-container">
+        <!-- Dashboard Header -->
+        <div class="dashboard-header">
+            <h1 class="dashboard-title">AI Recruitment Dashboard</h1>
+            <div class="filter-controls">
+                <select class="filter-select" id="statusFilter">
+                    <option value="all">All Status</option>
+                    <option value="completed">Completed</option>
+                    <option value="pending">Pending</option>
+                    <option value="failed">Failed</option>
+                </select>
+                <select class="filter-select" id="phaseFilter">
+                    <option value="all">All Phases</option>
+                    <option value="phase1">Phase 1: AI Interview</option>
+                    <option value="phase2">Phase 2: HR Interview</option>
+                </select>
+                <input type="text" class="filter-select" placeholder="Search candidates..." id="searchInput">
+            </div>
+        </div>
+
+        <!-- Statistics Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-number" id="totalCandidates">{{ candidats|length }}</span>
+                <span class="stat-label">Total Candidates</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" id="aiInterviews">0</span>
+                <span class="stat-label">AI Interviews Completed</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" id="videoAnalyses">0</span>
+                <span class="stat-label">Video Analyses</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" id="avgScore">0%</span>
+                <span class="stat-label">Average Score</span>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="content-grid">
+            <!-- Left Column - Candidates -->
+            <div class="candidates-section">
+                <div class="section-header">
+                    <h2 class="section-title">Candidate Pipeline</h2>
+                    <div class="tabs">
+                        <div class="tab active" data-tab="all">All Candidates</div>
+                        <div class="tab" data-tab="phase0">Phase 0 Results</div>
+                        <div class="tab" data-tab="phase1">Phase 1 Results</div>
+                        <div class="tab" data-tab="phase2">Phase 2 Results</div>
+                    </div>
+                </div>
+
+                <div class="tab-content active" id="tab-all">
+                    <table class="candidates-table">
+                        <thead>
+                            <tr>
+                                <th>Candidate</th>
+                                <th>Phase 0 Score</th>
+                                <th>Phase 1 Score</th>
+                                <th>Phase 2 Score</th>
+                                <th>MBTI</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="candidatesTableBody">
+                            {% if candidats %}
+                                {% for candidate in candidats %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ candidate.fullname }}</strong><br>
+                                        <small class="candidate-email">{{ candidate.email }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="score-badge" id="phase1Score{{ loop.index }}">--</span>
+                                    </td>
+                                    <td>
+                                        <span class="score-badge" id="phase2Score{{ loop.index }}">--</span>
+                                    </td>
+                                    <td>
+                                        <span class="score-badge" id="mbti{{ loop.index }}">--</span>
+                                    </td>
+                                    <td>
+                                        <span class="status-badge status-pending" id="status{{ loop.index }}">Pending</span>
+                                    </td>
+                                    <td>
+                                        <button class="btn-view" onclick="viewCandidateDetails('{{ candidate._id }}')">
+                                            View Details
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="6" class="no-candidates">
+                                        <i class="fas fa-users"></i>
+                                        No candidates registered yet.
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="tab-content" id="tab-phase0">
+                            <table>
+                <thead>
+                    <tr>
+                    <th>Email</th>
+                    <th>Phase 0 Score</th>
+                    <th>Job Upload</th>
+                    <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cand in candidats %}
+                    <tr>
+                    <td>{{ cand.email }}</td>
+                    <td id="score-{{ cand._id }}">{{ cand.phase0_score|default("...") }}%</td>
+                    <td>{{ cand.job_title|default("Aucun job") }}</td>
+                    <td>
+                        <button onclick="runMatching('{{ cand._id }}', '{{ cand.job_id }}')">
+                        Matching
+                        </button>
+                    </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                </table>
+                </div>
+                <div class="tab-content" id="tab-phase1">
+                    <!-- Phase 1 specific content will be loaded here -->
+                </div>
+
+                <div class="tab-content" id="tab-phase2">
+                    <!-- Phase 2 specific content will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Right Column - Analytics -->
+            <div class="analytics-sidebar">
+                <!-- AI Models Status -->
+                <div class="analytics-card">
+                    <h3>AI Models Status</h3>
+                    <div class="models-status">
+                        <div class="model-item">
+                            <span class="model-name">LLaMA 3.3-70B</span>
+                            <span class="model-status status-online">Online</span>
+                        </div>
+                        <div class="model-item">
+                            <span class="model-name">Cross-Encoder</span>
+                            <span class="model-status status-online">Online</span>
+                        </div>
+                        <div class="model-item">
+                            <span class="model-name">MBTI Classifier</span>
+                            <span class="model-status status-online">Online</span>
+                        </div>
+                        <div class="model-item">
+                            <span class="model-name">Emotion Detection</span>
+                            <span class="model-status status-online">Online</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Skills Distribution -->
+                <div class="analytics-card">
+                    <h3>Top Skills</h3>
+                    <div class="chart-container">
+                        <canvas id="skillsChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- MBTI Distribution -->
+                <div class="analytics-card">
+                    <h3>Personality Types</h3>
+                    <div class="chart-container">
+                        <canvas id="mbtiChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Candidate Detail Modal -->
+    <div class="modal" id="candidateModal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <div id="modalContent">
+                <!-- Modal content will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Store user session for client-side
+        document.addEventListener('DOMContentLoaded', function() {
+            const userData = {
+                isLoggedIn: true,
+                email: "{{ session.get('user_email', '') }}",
+                fullname: "{{ session.get('user_fullname', 'RH User') }}"
+            };
+            sessionStorage.setItem('user', JSON.stringify(userData));
+
+            // Initialize charts
+            initializeCharts();
+            
+            // Load demo data
+            loadDemoData();
+            
+            // Setup tab functionality
+            setupTabs();
+            
+            // Setup filters
+            setupFilters();
+        });
+
+        function initializeCharts() {
+            // Skills Distribution Chart
+            const skillsCtx = document.getElementById('skillsChart').getContext('2d');
+            new Chart(skillsCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Python', 'JavaScript', 'React', 'Node.js', 'MongoDB', 'AI/ML'],
+                    datasets: [{
+                        label: 'Candidates',
+                        data: [12, 8, 6, 5, 4, 3],
+                        backgroundColor: '#FF7F50',
+                        borderColor: '#FF6347',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // MBTI Distribution Chart
+            const mbtiCtx = document.getElementById('mbtiChart').getContext('2d');
+            new Chart(mbtiCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['INTJ', 'ENFP', 'ISTJ', 'ESTP', 'INTP'],
+                    datasets: [{
+                        data: [30, 25, 20, 15, 10],
+                        backgroundColor: [
+                            '#FF7F50', '#FF6347', '#FFE8E0', '#E64A19', '#718096'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        function loadDemoData() {
+            // This would be replaced with actual API calls
+            document.getElementById('aiInterviews').textContent = '8';
+            document.getElementById('videoAnalyses').textContent = '5';
+            document.getElementById('avgScore').textContent = '76%';
+
+            // Update candidate scores with demo data
+            {% for candidate in candidats %}
+            document.getElementById('phase1Score{{ loop.index }}').textContent = '{{ range(65, 95)|random }}%';
+            document.getElementById('phase2Score{{ loop.index }}').textContent = '{{ range(60, 90)|random }}%';
+            document.getElementById('mbti{{ loop.index }}').textContent = '{{ ["INTJ", "ENFP", "ISTJ", "ESTP", "INTP"]|random }}';
+            document.getElementById('status{{ loop.index }}').className = 'status-badge status-completed';
+            document.getElementById('status{{ loop.index }}').textContent = 'Completed';
+            {% endfor %}
+        }
+
+        function setupTabs() {
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Remove active class from all tabs and contents
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    // Add active class to clicked tab and corresponding content
+                    tab.classList.add('active');
+                    document.getElementById(`tab-${tab.dataset.tab}`).classList.add('active');
+                });
+            });
+        }
+
+        function setupFilters() {
+            // Add event listeners for filters
+            document.getElementById('statusFilter').addEventListener('change', filterCandidates);
+            document.getElementById('phaseFilter').addEventListener('change', filterCandidates);
+            document.getElementById('searchInput').addEventListener('input', filterCandidates);
+        }
+
+        function filterCandidates() {
+            // This would filter the candidate table based on selected filters
+            console.log('Filtering candidates...');
+        }
+
+        function viewCandidateDetails(candidateId) {
+            const candidats = [
+                {% for candidate in candidats %}
+                {
+                    id: "{{ candidate._id }}",
+                    fullname: {{ candidate.name|tojson }},
+                    email: {{ candidate.email|tojson }},
+                    skills: {{ candidate.skills|tojson }},
+                    cover_letter_filename: {{ (candidate.cover_letters[0].uploaded_filename if candidate.cover_letters else "")|tojson }},
+                    cover_letter_path: {{ (candidate.cover_letters[0].uploaded_path if candidate.cover_letters else "")|tojson }}
+                }{% if not loop.last %},{% endif %}
+                {% endfor %}
+            ];
+
+            const candidate = candidats.find(c => c.id === candidateId);
+            if (!candidate) {
+                alert("Candidat non trouvé.");
+                return;
+            }
+
+            // Générer l'URL de téléchargement
+            let downloadUrl = '';
+            if (candidate.cover_letter_path) {
+                const cleanPath = candidate.cover_letter_path
+                    .replace(/\\/g, '/')           // Windows → Unix
+                    .replace(/^uploads\//, '');    // Enlève "uploads/"
+                downloadUrl = `/uploads/${cleanPath}`;
+            }
+
+            // Nettoyer les compétences : garder seulement les mots techniques
+            const techKeywords = [
+                'Python', 'Java', 'PHP', 'C', 'R', 'HTML', 'CSS', '.NET', 'Symfony', 'Spring',
+                'FastAPI', 'Laravel', 'Django', 'MySQL', 'MongoDB', 'Git', 'GitHub',
+                'Power BI', 'MLflow', 'OCR', 'LLM', 'NLP', 'RAG', 'YOLO', 'BERT', 'PyTorch',
+                'ResNet', 'Docker', 'AI', 'ML', 'MLOps', 'Deep Learning', 'Machine Learning'
+            ];
+
+            const cleanSkills = [];
+            const seen = new Set();
+            for (const skill of candidate.skills) {
+                for (const keyword of techKeywords) {
+                    if (skill.includes(keyword) && !seen.has(keyword)) {
+                        seen.add(keyword);
+                        cleanSkills.push(keyword);
+                    }
+                }
+            }
+
+            const modalContent = document.getElementById('modalContent');
+            modalContent.innerHTML = `
+                <div class="candidate-detail-header">
+                    <h2>${candidate.fullname}</h2>
+                    <p><i class="fas fa-envelope"></i> ${candidate.email}</p>
+                </div>
+
+                <div class="detail-section">
+                    <h3><i class="fas fa-code"></i> Compétences clés</h3>
+                    <div class="skills-tags">
+                        ${cleanSkills.length > 0
+                            ? cleanSkills.map(skill => `<span class="skill-tag">${skill}</span>`).join('')
+                            : '<em>Aucune compétence détectée</em>'
+                        }
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <h3><i class="fas fa-file-pdf"></i> CV / Lettre de motivation</h3>
+                    <div class="cover-letter-box">
+                        <p><strong>Fichier :</strong> ${candidate.cover_letter_filename || "Aucun fichier uploadé"}</p>
+                    </div>
+
+                    ${downloadUrl ? `
+                        <a href="${downloadUrl}" download class="btn-download" target="_blank">
+                            <i class="fas fa-download"></i> Télécharger le CV
+                        </a>
+                    ` : '<p class="text-muted"><em>Fichier non disponible</em></p>'}
+                </div>
+            `;
+
+            document.getElementById('candidateModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('candidateModal').style.display = 'none';
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('candidateModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+    function runMatching(candidateId, jobId) {
+        if (!jobId || jobId === 'None') {
+            alert("Aucun job associé. Veuillez uploader un job.");
+            return;
+        }
+
+        const scoreCell = document.getElementById('score-' + candidateId);
+        const button = scoreCell.parentElement.querySelector('.matching-btn');
+
+        // Feedback
+        scoreCell.innerHTML = '<span style="color:#ff9800; font-weight:600;">Matching...</span>';
+        button.disabled = true;
+        button.textContent = "En cours...";
+
+        fetch(`/api/run_matching/${candidateId}?job_id=${jobId}`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.match_score !== undefined) {
+                    scoreCell.innerHTML = `<strong style="color:#e91e63;">${data.match_score.toFixed(2)}%</strong>`;
+                    button.textContent = "Relancer";
+                } else {
+                    scoreCell.innerHTML = '<span style="color:#f44336;">Échec</span>';
+                    button.textContent = "Réessayer";
+                    console.error("Matching error:", data.error);
+                }
+            })
+            .catch(err => {
+                scoreCell.innerHTML = '<span style="color:#f44336;">Erreur réseau</span>';
+                button.textContent = "Réessayer";
+                console.error(err);
+            })
+            .finally(() => {
+                button.disabled = false;
+            });
+    }
+    </script>
+</body>
+</html>

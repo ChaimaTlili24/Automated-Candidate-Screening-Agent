@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - CareerHub</title>
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f5f5f5;
+        }
+        .navbar {
+            background: linear-gradient(to right, #FF7F50, #FF6347);
+            padding: 15px 0;
+        }
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 50px auto;
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" style="color: white; text-decoration: none; font-weight: bold; font-size: 24px;">
+                CareerHub Dashboard
+            </a>
+            <div>
+                <a href="/" class="btn-auth" style="color: white; text-decoration: none; margin-right: 15px;">Home</a>
+                <a href="/logout" class="btn-auth logout" onclick="handleLogout()" style="color: white; text-decoration: none;">
+                    Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <h1>Welcome to your Dashboard!</h1>
+        <p>This is your personal dashboard. More features coming soon!</p>
+    </div>
+
+    <script>
+        function handleLogout() {
+            sessionStorage.removeItem('user');
+        }
+    </script>
+</body>
+</html>

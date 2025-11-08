@@ -1,0 +1,289 @@
+@import url("https://fonts.googleapis.com/css?family=Montserrat:400,800");
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    background: #ffffff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    font-family: "Montserrat", sans-serif;
+    height: 100vh;
+    margin: 0;
+    padding: 20px;
+}
+
+#auth-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    max-width: 900px;
+}
+
+.wrapperI, .wrapperU {
+    display: flex;
+    width: 100%;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.form-containerI, .form-containerU {
+    display: flex;
+    flex-direction: column;
+    align-items: center; 
+    justify-content: center; 
+    width: 100%; 
+}
+
+.containerI, .containerII, .containerU, .containerUU {
+    padding: 50px;
+    width: 50%;
+    min-height: 500px;
+    max-width: 100%;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.containerI, .containerU {
+    background-color: #fff;
+}
+
+.containerII { 
+    background: linear-gradient(to right, #FF7F50, #FF6347);
+    color: white;
+}
+
+.containerUU {
+    background: linear-gradient(to right, #FF7F50, #FF6347);
+    color: white;
+}
+
+.social-containerI, .social-containerU {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.socialI, .socialU {
+    border: 1px solid #ddd;
+    border-radius: 50%;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 10px;
+    height: 40px;
+    width: 40px;
+    color: #333;
+    font-size: 18px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.socialI:hover, .socialU:hover {
+    background-color: #f5f5f5;
+    transform: translateY(-2px);
+}
+
+.inputI, .inputU {
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    outline: none;
+    border-radius: 20px;
+    padding: 12px 15px;
+    margin: 8px 0;
+    width: 100%;
+    font-family: "Montserrat", sans-serif;
+    transition: all 0.3s ease;
+}
+
+.inputI:focus, .inputU:focus {
+    border: 2px solid #FF7F50;
+    background-color: #fff;
+}
+
+.link {
+    color: #007BFF;
+    font-size: 14px;
+    text-decoration: none;
+    display: block;
+    margin: 10px 0;
+}
+
+.titleI, .titleU {
+    font-weight: bold;
+    font-size: 36px;
+    margin: 0 0 30px 0;
+    background: linear-gradient(to right, #FF7F50, #FF6347);
+    -webkit-background-clip: text;
+    color: transparent;
+}
+
+.titleII, .titleUU {
+    font-weight: bold;
+    font-size: 32px;
+    margin-bottom: 20px;
+}
+
+.buttonI, .buttonU {
+    border-radius: 20px;
+    border: none;
+    background: linear-gradient(to right, #FF7F50, #FF6347);
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 12px 45px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: transform 0.3s ease;
+    cursor: pointer;
+    margin-top: 10px;
+    font-family: "Montserrat", sans-serif;
+}
+
+.buttonI:hover, .buttonU:hover {
+    transform: scale(1.05);
+    box-shadow: 0 5px 15px rgba(255, 127, 80, 0.4);
+}
+
+.buttonI:active, .buttonU:active {
+    transform: scale(0.98);
+}
+
+.paragII, .paragUU {
+    font-style: italic;
+    line-height: 1.6;
+    margin-bottom: 30px;
+}
+
+.buttonII, .buttonUU {
+    border-radius: 20px;
+    border: 2px solid white;
+    background: transparent; 
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 12px 45px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    font-family: "Montserrat", sans-serif;
+}
+
+.buttonII:hover, .buttonUU:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(1.05);
+}
+
+.hidden {
+    display: none !important;
+}
+
+.error-message {
+    color: red;
+    font-size: 12px;
+    font-weight: bold;
+    text-align: left;
+    width: 100%;
+    margin-top: -5px;
+    margin-bottom: 5px;
+}
+
+.inputI.error, .inputU.error {
+    border-color: red; 
+}
+
+.toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #4CAF50;
+    color: white;
+    padding: 15px 25px;
+    border-radius: 5px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.toast.show {
+    opacity: 1;
+}
+
+/* Flash Messages Integration */
+.flash-messages {
+    background-color: #FFE8E0;
+    border-left: 4px solid #FF7F50;
+    padding: 15px;
+    margin: 20px 0;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    width: 100%;
+}
+
+.flash-messages p {
+    margin: 5px 0;
+    color: #2D3748;
+    font-size: 14px;
+}
+
+/* Responsive Design */
+@media screen and (max-width: 768px) {
+    .containerII, .containerUU {
+        display: none;
+    }
+
+    .containerI, .containerU {
+        width: 100%;
+        border-radius: 20px;
+    }
+    
+    .wrapperI, .wrapperU {
+        border-radius: 20px;
+    }
+    
+    .containerI, .containerU {
+        padding: 30px;
+    }
+    
+    .titleI, .titleU {
+        font-size: 28px;
+    }
+    
+    .titleII, .titleUU {
+        font-size: 24px;
+    }
+}
+
+/* Loading state for buttons */
+.buttonI.loading, .buttonU.loading {
+    position: relative;
+    color: transparent;
+}
+
+.buttonI.loading::after, .buttonU.loading::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    top: 50%;
+    left: 50%;
+    margin-left: -10px;
+    margin-top: -10px;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
